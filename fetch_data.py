@@ -12,14 +12,15 @@ load_dotenv()
 def get_data():
     try:
         url = os.getenv("URL")
+        api = os.getenv("API_KEY")
         parameters = {
             "start": "1",
             "limit": "10",
-            "convert": "INR,USD",
+            "convert": "USD",
         }
         headers = {
             "Accepts": "application/json",
-            "X-CMC_PRO_API_KEY": "b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c",
+            "X-CMC_PRO_API_KEY": api,
         }
 
         session = Session()
@@ -57,23 +58,16 @@ def get_required(data):
         coins = data["data"]
         extracted = []
         for coin in coins:
-            inr_quote = coin["quote"]["INR"]
             usd_quote = coin["quote"]["USD"]
             extracted.append(
                 {
                     "name": coin["name"],
                     "symbol": coin["symbol"],
-                    "price_inr": inr_quote["price"],
                     "price_usd": usd_quote["price"],
-                    "market_cap_inr": inr_quote["market_cap"],
                     "market_cap_usd": usd_quote["market_cap"],
-                    "volume_24h_inr": inr_quote["volume_24h"],
                     "volume_24h_usd": usd_quote["volume_24h"],
-                    "percent_change_1h_inr": inr_quote["percent_change_1h"],
                     "percent_change_1h_usd": usd_quote["percent_change_1h"],
-                    "percent_change_24h_inr": inr_quote["percent_change_24h"],
                     "percent_change_24h_usd": usd_quote["percent_change_24h"],
-                    "percent_change_7d_inr": inr_quote["percent_change_7d"],
                     "percent_change_7d_usd": usd_quote["percent_change_7d"],
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 }
@@ -87,13 +81,11 @@ def get_required(data):
 def save_to_csv(df, filename="raw.csv", folder_name="raw_logs"):
     try:
         os.makedirs(folder_name, exist_ok=True)
-        file_path = os.path.join(folder_name, filename) 
+        file_path = os.path.join(folder_name, filename)
 
         file_exists = os.path.isfile(file_path)
 
-        df.to_csv(
-            file_path, mode="a", index=False, header=not file_exists
-        )
+        df.to_csv(file_path, mode="a", index=False, header=not file_exists)
 
         print(f"Data saved successfully to {file_path}")
     except Exception as e:
