@@ -34,6 +34,8 @@ def convert_to_required_types(df):
     except Exception as e:
         print("Error converting data types\nError:", e)
         return None
+
+
 def save_cleaned_to_csv(df, filename="cleaned.csv", folder_name="logs"):
 
     try:
@@ -49,6 +51,7 @@ def save_cleaned_to_csv(df, filename="cleaned.csv", folder_name="logs"):
 
     except Exception as e:
         print("Error writing cleaned data into CSV\nError:", e)
+
 
 if __name__ == "__main__":
     file_path = os.path.join("logs", "raw.csv")
