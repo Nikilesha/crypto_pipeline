@@ -1,7 +1,6 @@
 from requests import Session
 from requests.exceptions import *
 from dotenv import load_dotenv
-import pprint
 import os
 import pandas as pd
 from datetime import datetime
@@ -25,75 +24,86 @@ def get_data():
 
         session = Session()
         session.headers.update(headers)
-    except Exception as e:
-        print("Error getting api data\nError:", e)
 
-    try:
         response = session.get(url, params=parameters, timeout=10)
+        response.raise_for_status()
 
         data = response.json()
-        response.raise_for_status()
 
         if data.get("status", {}).get("error_code") != 0:
             print("API Error:", data["status"]["error_message"])
-        else:
-            print("Success! fetched data")
+            return None
+
+        print("Success! Fetched data")
+        return data
 
     except Timeout:
         print("The request timed out")
     except ConnectionError:
-        print("Connection error, check your network or vpn")
+        print("Connection error, check your network or VPN")
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
     except RequestException as req_err:
         print(f"Request error occurred: {req_err}")
     except Exception as e:
-        print("An error occurred:", e)
-
-    return data
+        print("An unexpected error occurred:", e)
+    return None
 
 
 def get_required(data):
+   
     try:
         coins = data["data"]
         extracted = []
+
         for coin in coins:
-            usd_quote = coin["quote"]["USD"]
+            usd = coin["quote"]["USD"]
+
             extracted.append(
                 {
                     "name": coin["name"],
                     "symbol": coin["symbol"],
-                    "price_usd": usd_quote["price"],
-                    "market_cap_usd": usd_quote["market_cap"],
-                    "volume_24h_usd": usd_quote["volume_24h"],
-                    "percent_change_1h_usd": usd_quote["percent_change_1h"],
-                    "percent_change_24h_usd": usd_quote["percent_change_24h"],
-                    "percent_change_7d_usd": usd_quote["percent_change_7d"],
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "price_usd": usd["price"],
+                    "market_cap_usd": usd["market_cap"],
+                    "volume_24h_usd": usd["volume_24h"],
+                    "percent_change_1h_usd": usd["percent_change_1h"],
+                    "percent_change_24h_usd": usd["percent_change_24h"],
+                    "percent_change_7d_usd": usd["percent_change_7d"],
+                    "acquired_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 }
             )
+
         df = pd.DataFrame(extracted)
         return df
+
     except Exception as e:
-        print("Error processing data\nError:", e)
+        print("Error processing extracted data\nError:", e)
+        return None
 
 
-def save_to_csv(df, filename="raw.csv", folder_name="raw_logs"):
+def save_to_csv(df, filename="raw.csv", folder_name="logs"):
+
     try:
         os.makedirs(folder_name, exist_ok=True)
         file_path = os.path.join(folder_name, filename)
 
-        file_exists = os.path.isfile(file_path)
 
-        df.to_csv(file_path, mode="a", index=False, header=not file_exists)
+        write_header = True
+        if os.path.isfile(file_path) and os.path.getsize(file_path) > 0:
+            write_header = False
 
+        df.to_csv(file_path, mode="a", index=False, header=write_header)
         print(f"Data saved successfully to {file_path}")
+
     except Exception as e:
         print("Error writing into CSV\nError:", e)
 
 
 if __name__ == "__main__":
     api_data = get_data()
+
     if api_data:
-        extracted = get_required(api_data)
-        save_to_csv(extracted, "raw.csv")
+        extracted_df = get_required(api_data)
+
+        if extracted_df is not None:
+            save_to_csv(extracted_df, "raw.csv")
