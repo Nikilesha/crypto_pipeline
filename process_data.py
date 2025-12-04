@@ -34,21 +34,20 @@ def convert_to_required_types(df):
     except Exception as e:
         print("Error converting data types\nError:", e)
         return None
-def save_cleaned_to_csv(df, filename="cleaned.csv", folder_name="logs"):
 
+
+def save_cleaned_to_csv(df, filename="cleaned.csv", folder_name="logs"):
     try:
         os.makedirs(folder_name, exist_ok=True)
         file_path = os.path.join(folder_name, filename)
 
-        write_header = True
-        if os.path.isfile(file_path) and os.path.getsize(file_path) > 0:
-            write_header = False
-
-        df.to_csv(file_path, mode="a", index=False, header=write_header)
+        # Always overwrite and write headers
+        df.to_csv(file_path, mode="w", index=False, header=True)
         print(f"Cleaned data saved successfully to {file_path}")
 
     except Exception as e:
         print("Error writing cleaned data into CSV\nError:", e)
+
 
 if __name__ == "__main__":
     file_path = os.path.join("logs", "raw.csv")
