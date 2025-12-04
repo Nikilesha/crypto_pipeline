@@ -51,14 +51,12 @@ def get_data():
 
 
 def get_required(data):
-   
     try:
         coins = data["data"]
         extracted = []
 
         for coin in coins:
             usd = coin["quote"]["USD"]
-
             extracted.append(
                 {
                     "name": coin["name"],
@@ -82,17 +80,12 @@ def get_required(data):
 
 
 def save_to_csv(df, filename="raw.csv", folder_name="logs"):
-
     try:
         os.makedirs(folder_name, exist_ok=True)
         file_path = os.path.join(folder_name, filename)
 
-
-        write_header = True
-        if os.path.isfile(file_path) and os.path.getsize(file_path) > 0:
-            write_header = False
-
-        df.to_csv(file_path, mode="a", index=False, header=write_header)
+        # Always overwrite and write headers
+        df.to_csv(file_path, mode="w", index=False, header=True)
         print(f"Data saved successfully to {file_path}")
 
     except Exception as e:
@@ -101,9 +94,7 @@ def save_to_csv(df, filename="raw.csv", folder_name="logs"):
 
 if __name__ == "__main__":
     api_data = get_data()
-
     if api_data:
         extracted_df = get_required(api_data)
-
         if extracted_df is not None:
             save_to_csv(extracted_df, "raw.csv")
